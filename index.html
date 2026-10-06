@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hardware Paruro | Componentes y armado de PC en Lima</title>
 <meta name="description" content="Hardware Paruro: procesadores, tarjetas de video, memorias, laptops y armado de PC en Jr. Paruro, Lima.">
@@ -117,8 +118,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
 @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .chat-head{background:var(--board);color:var(--silk);padding:.9rem 1rem;display:flex;align-items:center;justify-content:space-between}
 .chat-head strong{font-family:var(--display);font-size:1.35rem;display:block;line-height:1.1}
-.chat-head span{font-size:.82rem;color:#b9c9d8}
-.chat-head span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#39d07a;margin-right:.4rem}
+.chat-head .status{font-size:.82rem;color:#b9c9d8}
+.chat-head .status::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#39d07a;margin-right:.4rem}
 .chat-close{background:none;border:0;color:var(--silk);font-size:1.6rem;line-height:1;cursor:pointer;padding:.2rem .4rem}
 .chat-body{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.65rem;background:var(--bg)}
 .msg{max-width:86%;padding:.65rem .85rem;border-radius:12px;font-size:.95rem;line-height:1.5;white-space:pre-line}
@@ -193,6 +194,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
         <article class="part"><div class="code">U4</div><h3>Memorias RAM</h3><p>DDR4 y DDR5 para PC y laptop.</p></article>
         <article class="part"><div class="code">U5</div><h3>Almacenamiento</h3><p>SSD NVMe, SSD SATA y discos duros.</p></article>
         <article class="part"><div class="code">U6</div><h3>Laptops y periféricos</h3><p>Laptops, monitores, teclados, mouse, fuentes y cases.</p></article>
+        <article class="part"><div class="code">R1</div><h3>Componentes electrónicos</h3><p>Resistencias, condensadores, diodos, transistores e integrados.</p></article>
+        <article class="part"><div class="code">A1</div><h3>Arduino y módulos</h3><p>Arduino, ESP32, Raspberry Pi, sensores, relés y motores.</p></article>
+        <article class="part"><div class="code">T1</div><h3>Herramientas</h3><p>Cautines, estaño, multímetros, protoboards y cables.</p></article>
       </div>
     </div>
   </section>
@@ -247,7 +251,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
 
 <div class="chat" id="chat" role="dialog" aria-label="Asistente de Hardware Paruro">
   <div class="chat-head">
-    <div class="who"><span class="avatar" aria-hidden="true">🤖</span><div><strong>Asistente Paruro</strong><span>En línea</span></div></div>
+    <div class="who"><span class="avatar" aria-hidden="true">🤖</span><div><strong>Asistente Paruro</strong><span class="status" id="chatStatus">En línea (versión 6)</span></div></div>
     <button class="chat-close" type="button" aria-label="Cerrar chat" id="chatClose">×</button>
   </div>
   <div class="chat-body" id="chatBody" aria-live="polite"></div>
@@ -281,12 +285,16 @@ const SESSION_ID = getSessionId();
 
 /* Envía el mensaje al chatbot de n8n (nodo Chat Trigger) */
 async function askN8n(text){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 15000);
   const res = await fetch(CONFIG.n8nWebhook, {
     method: "POST",
+    signal: ctrl.signal,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "sendMessage", sessionId: SESSION_ID, chatInput: text })
   });
-  if(!res.ok) throw new Error("HTTP " + res.status);
+  clearTimeout(timer);
+  if(!res.ok) throw new Error("n8n respondió HTTP " + res.status + (res.status===404 ? " (¿workflow inactivo o URL incorrecta?)" : ""));
   const raw = await res.text();
   let data; try{ data = JSON.parse(raw); }catch(e){ return raw.trim(); }
   if(Array.isArray(data)) data = data[0] || {};
@@ -295,13 +303,13 @@ async function askN8n(text){
 
 /* ===== Las 10 preguntas básicas ===== */
 const FAQ = [
-  { q:"¿Cuál es el horario de atención?", k:["horario","hora","abren","cierran","atienden","domingo"],
+  { q:"¿Cuál es el horario de atención?", k:["horario","hora","abren","abierto","cierran","atienden","atencion","domingo","sabado","feriado"],
     a:"Atendemos de lunes a sábado de 9:00 a. m. a 7:00 p. m. y los domingos de 10:00 a. m. a 2:00 p. m." },
-  { q:"¿Dónde están ubicados?", k:["ubicacion","ubicados","direccion","donde","tienda","local","llegar"],
+  { q:"¿Dónde están ubicados?", k:["ubicacion","ubicados","ubican","direccion","donde","tienda","local","llegar","paruro","mapa"],
     a:"Estamos en Jr. Paruro, Cercado de Lima, la zona de tiendas de cómputo más conocida de la ciudad." },
-  { q:"¿Qué productos venden?", k:["productos","venden","tienen","catalogo","marcas","componentes"],
-    a:"Procesadores, tarjetas de video, placas madre, memorias RAM, SSD y discos duros, fuentes, cases, monitores, periféricos y laptops. Trabajamos con AMD, Intel, NVIDIA, ASUS, MSI, Gigabyte, Kingston, Corsair, entre otras." },
-  { q:"¿Qué métodos de pago aceptan?", k:["pago","pagar","yape","plin","tarjeta","transferencia","efectivo","cuotas"],
+  { q:"¿Qué productos venden?", k:["producto","productos","venden","catalogo","marcas","componente","componentes","que tienen","que venden"],
+    a:"En cómputo: procesadores, tarjetas de video, placas madre, memorias RAM, SSD y discos duros, fuentes, cases, monitores, periféricos y laptops. En electrónica: resistencias, condensadores, semiconductores, circuitos integrados, Arduino, sensores, módulos y herramientas. Trabajamos con AMD, Intel, NVIDIA, ASUS, MSI, Gigabyte, Kingston, Corsair, entre otras." },
+  { q:"¿Qué métodos de pago aceptan?", k:["pago","pagar","yape","plin","visa","mastercard","transferencia","efectivo","cuotas","deposito"],
     a:"Aceptamos efectivo, Yape, Plin, transferencia bancaria y tarjetas de crédito o débito." },
   { q:"¿Hacen envíos a provincias?", k:["envio","envios","delivery","provincia","despacho","agencia","shalom","olva"],
     a:"Sí. Hacemos delivery en Lima Metropolitana y envíos a todo el Perú por agencia. El costo depende del destino y del tamaño del pedido." },
@@ -330,42 +338,189 @@ const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""
 function addMsg(text, who="bot"){
   const d = document.createElement("div");
   d.className = "msg " + who;
-  d.textContent = text;
+  d.textContent = (who==="bot" ? "🤖 " : "") + text;
   body.appendChild(d);
   body.scrollTop = body.scrollHeight;
 }
 
-function showQuick(){
+function showQuick(){ /* preguntas básicas eliminadas: el chat es conversacional con n8n */ }
+
+/* ===== Catálogo: respuestas sobre los componentes que vendemos ===== */
+const PRODUCTS = [
+  { name:"Procesadores", k:["procesador","procesadores","cpu","ryzen","intel","core i3","core i5","core i7","core i9","i3","i5","i7","i9","amd","ultra 5","ultra 7"],
+    a:"Tenemos procesadores AMD Ryzen e Intel Core:\n• Oficina y estudios: Ryzen 5 5600G / 8600G o Intel Core i3-12100 / i5-12400.\n• Gaming: Ryzen 5 7600, Ryzen 7 7800X3D, Intel Core i5-14400F / i5-14600K.\n• Edición y diseño: Ryzen 9 7900X / 9900X, Intel Core i7-14700K / Core Ultra 7.\nTe ayudamos a elegir la placa madre compatible." },
+  { name:"Tarjetas de video", k:["tarjeta de video","tarjetas de video","tarjeta grafica","grafica","graficas","gpu","rtx","gtx","geforce","radeon","rx","nvidia","3060","4060","4070","5060","5070","7600","7800"],
+    a:"Tarjetas de video NVIDIA GeForce y AMD Radeon (ASUS, MSI, Gigabyte, Zotac, Sapphire):\n• Entrada (1080p): RTX 3050 / RTX 4060 / RX 7600.\n• Gama media (1440p): RTX 4060 Ti / RTX 5060 Ti / RX 7700 XT.\n• Alta gama: RTX 4070 Super / RTX 5070 / RX 7800 XT y superiores.\nDinos qué juegos o programas usas y te recomendamos la ideal." },
+  { name:"Placas madre", k:["placa madre","placas madre","placa","motherboard","mainboard","board","chipset","am4","am5","b450","b550","b650","x670","h610","b760","z790","lga1700"],
+    a:"Placas madre ASUS, MSI, Gigabyte y ASRock:\n• AMD AM4 (B450, B550) y AM5 (B650, X670, B850).\n• Intel LGA1700 (H610, B760, Z790) y LGA1851.\nFormatos ATX, Micro-ATX y Mini-ITX. Verificamos la compatibilidad con tu procesador y memoria." },
+  { name:"Memorias RAM", k:["ram","memoria","memorias","ddr4","ddr5","sodimm","8gb","16gb","32gb","64gb"],
+    a:"Memorias RAM Kingston Fury, Corsair, TeamGroup y ADATA:\n• DDR4 y DDR5 para PC, en kits de 8, 16, 32 y 64 GB.\n• SODIMM DDR4/DDR5 para laptop.\nRecomendamos 16 GB para uso general y 32 GB para gaming o edición." },
+  { name:"Almacenamiento", k:["ssd","nvme","m.2","m2","disco","discos","disco duro","hdd","almacenamiento","sata","1tb","2tb","500gb","512gb"],
+    a:"Almacenamiento Kingston, Western Digital, Samsung, Crucial y Seagate:\n• SSD NVMe M.2 (Gen3 y Gen4) de 500 GB, 1 TB y 2 TB.\n• SSD SATA de 2,5\" para PC y laptop.\n• Discos duros de 1 a 4 TB para respaldo.\nUn SSD hace que tu equipo encienda y abra programas mucho más rápido." },
+  { name:"Laptops", k:["laptop","laptops","notebook","portatil","macbook","lenovo","hp","asus","acer","dell","msi"],
+    a:"Laptops Lenovo, HP, ASUS, Acer y MSI:\n• Estudio y oficina: Core i5 / Ryzen 5, 16 GB RAM, SSD 512 GB.\n• Gamer: RTX 4050 / 4060 con pantalla de 144 Hz.\n• Diseño: pantallas de buen color y 32 GB de RAM.\nCuéntanos tu presupuesto y uso y te enviamos opciones." },
+  { name:"Monitores", k:["monitor","monitores","pantalla","144hz","165hz","240hz","4k","2k","ips","curvo"],
+    a:"Monitores LG, Samsung, ASUS, AOC y Teros:\n• Oficina: 22\" a 27\" Full HD IPS.\n• Gaming: 144 Hz, 165 Hz y 240 Hz en Full HD y 2K.\n• Diseño: 2K y 4K con buena precisión de color." },
+  { name:"Fuentes y cases", k:["fuente","fuentes","psu","fuente de poder","watts","80 plus","case","cases","gabinete","chasis","cooler","refrigeracion","ventilador","liquida"],
+    a:"Fuentes certificadas 80 Plus (Corsair, EVGA, MSI, Cooler Master, Thermaltake) de 550 W a 1000 W, cases ATX y Micro-ATX, coolers por aire y refrigeración líquida. Te calculamos la potencia que necesita tu PC." },
+  { name:"Periféricos", k:["periferico","perifericos","teclado","teclados","mouse","audifonos","headset","auricular","parlante","webcam","microfono","mousepad","impresora","router","wifi"],
+    a:"Periféricos Logitech, Redragon, HyperX, Razer y Teros: teclados mecánicos y de oficina, mouse, audífonos, webcams, micrófonos, parlantes y adaptadores WiFi." },
+
+  /* ---- Electrónica ---- */
+  { name:"Resistencias", k:["resistencia","resistencias","resistor","resistores","ohm","ohmios","ohmio","potenciometro","potenciometros","trimmer","preset"],
+    a:"Sí, vendemos resistencias:\n• Carbón y película metálica de 1/4 W, 1/2 W, 1 W, 2 W y 5 W.\n• Valores de 1 Ω a 10 MΩ (serie E12 y E24), por unidad o en bolsas de 100.\n• Kits surtidos, potenciómetros y trimmers." },
+  { name:"Condensadores", k:["condensador","condensadores","capacitor","capacitores","electrolitico","ceramico","poliester","tantalio","microfaradio","faradio"],
+    a:"Sí, vendemos condensadores electrolíticos, cerámicos, de poliéster y de tantalio, desde picofaradios hasta miles de microfaradios, en voltajes de 16 V a 450 V. También kits surtidos." },
+  { name:"Semiconductores", k:["diodo","diodos","led","leds","transistor","transistores","mosfet","tiristor","triac","scr","zener","puente rectificador","regulador","7805","lm317","1n4007","2n2222","bc547","tip31","irf"],
+    a:"Sí, tenemos semiconductores: diodos (1N4007, Zener, Schottky), puentes rectificadores, LEDs de 3 y 5 mm, transistores (2N2222, BC547, TIP31, TIP41), MOSFET (IRF), triacs, SCR y reguladores (7805, LM317)." },
+  { name:"Circuitos integrados", k:["integrado","integrados","circuito integrado","chip","555","lm358","lm741","74hc","cd4017","l298","optoacoplador","pc817","microcontrolador","pic","atmega"],
+    a:"Sí, tenemos circuitos integrados: temporizadores 555, amplificadores operacionales (LM358, LM741), lógica 74HC y CD4000, drivers (L298N), optoacopladores (PC817) y microcontroladores PIC y ATmega, con sus zócalos." },
+  { name:"Arduino y módulos", k:["arduino","esp32","esp8266","nodemcu","raspberry","sensor","sensores","modulo","modulos","relay","rele","servo","motor","pantalla lcd","oled","ultrasonico","hc-sr04","dht11","bluetooth","hc-05","robotica"],
+    a:"Sí, vendemos Arduino (Uno, Nano, Mega), ESP32, ESP8266 y Raspberry Pi, además de sensores (ultrasonido, temperatura, humedad, movimiento), relés, servomotores, motores, pantallas LCD y OLED, y módulos Bluetooth y WiFi. Ideal para proyectos y robótica." },
+  { name:"Herramientas y accesorios", k:["cautin","soldador","estano","pasta de soldar","multimetro","tester","protoboard","jumper","jumpers","cable","cables","borneras","bornera","conector","conectores","placa perforada","baquelita","termocontraible","pinza","alicate","bateria","baterias","porta pilas","fuente de laboratorio"],
+    a:"Sí, tenemos herramientas y accesorios: cautines y estaciones de soldar, estaño y pasta, multímetros, protoboards, cables jumper, conectores y borneras, placas perforadas y baquelitas, termocontraíble, pinzas, baterías y porta pilas." }
+];
+
+/* Detecta valores como "100k", "4.7kΩ", "10 uf", "220 ohm" */
+function detectValue(text){
+  const t = norm(text).replace(",",".");
+  const r = t.match(/(\d+(?:\.\d+)?)\s*(k|m)\s*(ohm|ohmios|ohms|Ω)?(?![a-z])/i) || t.match(/(\d+(?:\.\d+)?)\s*(ohm|ohmios|ohms|Ω)/i);
+  const c = t.match(/(\d+(?:\.\d+)?)\s*(uf|µf|mf|nf|pf|microfaradios?)/i);
+  if(c) return { type:"cap", label: c[1] + " " + c[2].replace(/microfaradios?/i,"µF").replace(/^uf$/i,"µF").replace(/^nf$/i,"nF").replace(/^pf$/i,"pF").replace(/^mf$/i,"µF") };
+  if(r){
+    const unit = /^(k)$/i.test(r[2]) ? " kΩ" : /^(m)$/i.test(r[2]) ? " MΩ" : " Ω";
+    return { type:"res", label: r[1] + unit };
+  }
+  return null;
+}
+
+const PRODUCT_INTRO = "Estos son los componentes que vendemos. Elige uno para ver detalles:";
+
+/* Coincidencia de palabras: las cortas (ram, rx, i5, hp) deben ser palabra completa */
+function cleanText(t){ return " " + norm(t).replace(/[¿?¡!,;:()"]/g," ").replace(/\s+/g," ").trim() + " "; }
+function hasKw(txt, k){
+  const kk = norm(k);
+  return kk.length <= 4 ? txt.includes(" " + kk + " ") : txt.includes(kk);
+}
+function findProducts(text){
+  const t = cleanText(text);
+  const v = detectValue(text);
+  if(v && v.type==="res" && !/\b(gb|tb|hz|w|watts|mb)\b/.test(norm(text))) {
+    const extra = PRODUCTS.findIndex(p=>p.name==="Resistencias");
+    if(!PRODUCTS[extra].k.some(k=>hasKw(t,k)) && /\d\s*k\b|ohm|Ω/i.test(norm(text))) return [extra];
+  }
+  if(v && v.type==="cap"){
+    const extra = PRODUCTS.findIndex(p=>p.name==="Condensadores");
+    if(!PRODUCTS[extra].k.some(k=>hasKw(t,k))) return [extra];
+  }
+  return PRODUCTS.map((p,i)=>({i, s:p.k.filter(k=>hasKw(t,k)).length})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).map(x=>x.i);
+}
+
+function showProductMenu(){
+  addMsg(PRODUCT_INTRO);
   const wrap = document.createElement("div");
   wrap.className = "quick";
-  FAQ.forEach((f,i)=>{
+  PRODUCTS.forEach((p,i)=>{
     const b = document.createElement("button");
-    b.type = "button"; b.textContent = f.q;
-    b.onclick = ()=>answer(i);
+    b.type="button"; b.textContent = p.name;
+    b.onclick = ()=>{ addMsg(p.name,"user"); productAnswer([i]); };
     wrap.appendChild(b);
   });
-  const lead = document.createElement("button");
-  lead.type = "button"; lead.textContent = "Dejar mis datos";
-  lead.onclick = ()=>{ addMsg("Quiero dejar mis datos","user"); showLeadForm(); };
-  wrap.appendChild(lead);
   body.appendChild(wrap);
   body.scrollTop = body.scrollHeight;
 }
 
-function answer(i, fromText=false){
-  if(!fromText) addMsg(FAQ[i].q,"user");
+let lastText = "";
+function productAnswer(list, asksPrice=false){
   setTimeout(()=>{
-    addMsg(FAQ[i].a);
-    if(i===9){ showLeadForm(); }
-    else { addMsg("¿Te ayudo con algo más? Elige otra pregunta o deja tus datos para que te contactemos."); showQuick(); }
+    const v = detectValue(lastText);
+    const first = PRODUCTS[list[0]] ? PRODUCTS[list[0]].name : "";
+    if(v && v.type==="res" && first==="Resistencias") addMsg("Sí, tenemos resistencias de " + v.label + " en 1/4 W, 1/2 W y otras potencias.");
+    if(v && v.type==="cap" && first==="Condensadores") addMsg("Sí, tenemos condensadores de " + v.label + " en varios voltajes.");
+    list.slice(0,3).forEach(i=>addMsg(PRODUCTS[i].a));
+    addMsg(asksPrice
+      ? "Los precios cambian según stock y tipo de cambio. Déjame tus datos y te enviamos el precio actualizado por WhatsApp:"
+      : "Si quieres precio y stock actualizado, escribe «dejar mis datos» o pregúntame por otro componente.");
+    if(asksPrice) showLeadForm();
+    body.scrollTop = body.scrollHeight;
   },350);
 }
 
+function answer(i, fromText=false){
+  if(!fromText) addMsg(FAQ[i].q,"user");
+  
+  setTimeout(()=>{
+    addMsg(FAQ[i].a);
+    if(i===9){ showLeadForm(); }
+    else { addMsg("¿Te ayudo con algo más?"); }
+  },350);
+}
+
+const SMALLTALK = [
+  { k:["hola","buenas","buenos dias","buen dia","buenas tardes","buenas noches","hey","saludos","que tal","alo"],
+    a:"¡Hola! Bienvenido a Hardware Paruro. ¿En qué te puedo ayudar? Escríbeme lo que buscas: componentes de cómputo, electrónica, precios, horarios o envíos.", menu:false },
+  { k:["gracias","muchas gracias","genial","perfecto","excelente","ok","listo","chevere"],
+    a:"¡Con gusto! Si necesitas algo más, aquí estoy.", menu:false },
+  { k:["chau","adios","hasta luego","nos vemos","bye"],
+    a:"¡Gracias por escribirnos! Te esperamos en Hardware Paruro.", menu:false },
+  { k:["dejar mis datos","mis datos","datos","asesor","humano","persona","vendedor","llamar","whatsapp","contacto","telefono","numero","correo"],
+    a:"Un asesor te atenderá por WhatsApp al 998 504 090 o por correo a juancarlosperezpayco@gmail.com. También puedes dejar tus datos aquí y te escribimos.", lead:true }
+];
+
+const ASK_WORDS = ["tienen","tienes","venden","vendes","hay","busco","necesito","quiero","consiguen","manejan","stock"];
+const PRICE_WORDS = ["precio","precios","cuanto","cuesta","cuestan","costo","vale","valen","cotizacion","cotizar"];
+
+function localReply(text){
+  lastText = text;
+  const t = cleanText(text);
+  const faq = findAnswer(text);
+  // 1) Temas de servicio (horario, pago, envío, garantía, etc.) tienen prioridad
+  if(faq>=0 && faq!==2 && faq!==9 && faq!==6){ answer(faq,true); return; }
+  // 2) Preguntas sobre componentes
+  const prods = findProducts(text);
+  if(prods.length){
+    const asksPrice = PRICE_WORDS.some(w=>hasKw(t,w));
+    productAnswer(prods, asksPrice);
+    return;
+  }
+  // 3) Armado, catálogo general o cotización
+  if(faq>=0){ answer(faq,true); return; }
+  // 4) Saludos y frases comunes
+  for(const st of SMALLTALK){
+    if(st.k.some(k=>hasKw(t,k))){
+      setTimeout(()=>{
+        addMsg(st.a);
+        if(st.menu) showQuick();
+        if(st.lead) showLeadForm();
+      },350);
+      return;
+    }
+  }
+  // 5) Pregunta por un producto que no está en la lista
+  if(ASK_WORDS.some(w=>hasKw(t,w))){
+    setTimeout(()=>{
+      addMsg("Es posible que lo tengamos: en Paruro conseguimos casi todo en componentes de cómputo y electrónica. Déjame tus datos y te confirmamos stock y precio por WhatsApp.");
+      showLeadForm();
+    },350);
+    return;
+  }
+  // 6) No entendió: ofrece opciones
+  setTimeout(()=>{
+    addMsg("No estoy seguro de haber entendido. Pregúntame por un componente (por ejemplo: «¿tienen RTX 4060?» o «resistencias de 100k») o escribe «dejar mis datos» para que un asesor te contacte.");
+  },350);
+}
+
+/* ¿Lo puede responder el asistente local? */
+function knowsLocally(text){
+  const t = cleanText(text);
+  return detectValue(text)!==null && findProducts(text).length>0 || findAnswer(text)>=0 || findProducts(text).length>0 || SMALLTALK.some(st=>st.k.some(k=>hasKw(t,k)));
+}
+
 function findAnswer(text){
-  const t = norm(text);
+  const t = cleanText(text);
   let best=-1, score=0;
   FAQ.forEach((f,i)=>{
-    const s = f.k.filter(k=>t.includes(norm(k))).length;
+    const s = f.k.filter(k=>hasKw(t,k)).length;
     if(s>score){score=s;best=i;}
   });
   return best;
@@ -435,8 +590,7 @@ function openChat(){
   toggle.setAttribute("aria-expanded","true");
   if(!started){
     started = true;
-    addMsg("¡Hola! Soy el asistente de Hardware Paruro. Elige una pregunta o escríbela.");
-    showQuick();
+    addMsg("¡Hola! Soy el asistente virtual de Hardware Paruro. ¿En qué te puedo ayudar hoy?");
   }
   setTimeout(()=>input.focus(),50);
 }
@@ -453,11 +607,13 @@ form.addEventListener("submit", async e=>{
   if(!t) return;
   addMsg(t,"user");
   input.value = "";
+
+  // Cada mensaje se envía a tu agente de n8n
   input.disabled = true;
 
   const typing = document.createElement("div");
   typing.className = "msg bot typing";
-  typing.textContent = "Escribiendo";
+  typing.textContent = "🤖 Escribiendo";
   body.appendChild(typing);
   body.scrollTop = body.scrollHeight;
 
@@ -467,14 +623,9 @@ form.addEventListener("submit", async e=>{
     if(reply){ addMsg(reply); }
     else { throw new Error("Respuesta vacía"); }
   }catch(err){
-    console.warn("n8n no respondió, uso respuestas locales:", err);
+    console.warn("n8n no respondió, uso el asistente local:", err.message || err);
     typing.remove();
-    const i = findAnswer(t);
-    if(i>=0){ answer(i,true); }
-    else {
-      addMsg("No tengo esa respuesta, pero un asesor te puede ayudar. Deja tus datos y te escribimos.");
-      showLeadForm();
-    }
+    localReply(t);
   }finally{
     input.disabled = false;
     input.focus();
