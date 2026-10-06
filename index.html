@@ -106,7 +106,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
 
 /* ---------- Chatbot ---------- */
 .chat-toggle{position:fixed;right:1.2rem;bottom:calc(1.2rem + env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:.55rem;background:var(--copper);color:#1a1006;border:0;border-radius:999px;padding:.9rem 1.25rem;font:600 1rem var(--body);cursor:pointer;box-shadow:0 8px 24px rgba(10,25,40,.35)}
-.chat-toggle svg{width:22px;height:22px}
+.chat-toggle .bot-emoji{font-size:1.6rem;line-height:1}
+.chat-head .avatar{font-size:1.9rem;line-height:1;margin-right:.6rem}
+.chat-head .who{display:flex;align-items:center}
+.msg.typing{color:var(--muted);font-style:italic}
+.msg.typing::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4,end) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 .chat{position:fixed;right:1.2rem;bottom:calc(5.4rem + env(safe-area-inset-bottom,0px));z-index:60;width:min(380px,calc(100vw - 2.4rem));height:min(600px,calc(100% - 7.5rem));display:none;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(10,25,40,.35)}
 .chat.open{display:flex;animation:pop .2s ease-out}
 @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -236,13 +241,13 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
 
 <!-- Chatbot -->
 <button class="chat-toggle" type="button" aria-controls="chat" aria-expanded="false" id="chatToggle">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
-  ¿Consultas?
+  <span class="bot-emoji" aria-hidden="true">🤖</span>
+  Asistente
 </button>
 
 <div class="chat" id="chat" role="dialog" aria-label="Asistente de Hardware Paruro">
   <div class="chat-head">
-    <div><strong>Asistente Paruro</strong><span>En línea</span></div>
+    <div class="who"><span class="avatar" aria-hidden="true">🤖</span><div><strong>Asistente Paruro</strong><span>En línea</span></div></div>
     <button class="chat-close" type="button" aria-label="Cerrar chat" id="chatClose">×</button>
   </div>
   <div class="chat-body" id="chatBody" aria-live="polite"></div>
@@ -257,8 +262,36 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
 const CONFIG = {
   whatsapp: "51998504090",                 // 51 = código de Perú
   email: "juancarlosperezpayco@gmail.com",
-  empresa: "Hardware Paruro"
+  empresa: "Hardware Paruro",
+  n8nWebhook: "https://juanqui.app.n8n.cloud/webhook/e7c1f3a2-5b6d-4c8e-9f10-ventas-electronica/chat"
 };
+
+/* Sesión del chat para que n8n recuerde la conversación */
+function getSessionId(){
+  let id;
+  try{ id = localStorage.getItem("hp_chat_session"); }catch(e){}
+  if(!id){
+    id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+         : "s-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    try{ localStorage.setItem("hp_chat_session", id); }catch(e){}
+  }
+  return id;
+}
+const SESSION_ID = getSessionId();
+
+/* Envía el mensaje al chatbot de n8n (nodo Chat Trigger) */
+async function askN8n(text){
+  const res = await fetch(CONFIG.n8nWebhook, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "sendMessage", sessionId: SESSION_ID, chatInput: text })
+  });
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  const raw = await res.text();
+  let data; try{ data = JSON.parse(raw); }catch(e){ return raw.trim(); }
+  if(Array.isArray(data)) data = data[0] || {};
+  return (data.output || data.text || data.response || data.message || "").toString().trim();
+}
 
 /* ===== Las 10 preguntas básicas ===== */
 const FAQ = [
@@ -414,19 +447,37 @@ document.getElementById("chatClose").onclick = closeChat;
 document.querySelectorAll("[data-open-chat]").forEach(b=>b.onclick=openChat);
 document.addEventListener("keydown",e=>{ if(e.key==="Escape" && chat.classList.contains("open")) closeChat(); });
 
-form.addEventListener("submit", e=>{
+form.addEventListener("submit", async e=>{
   e.preventDefault();
   const t = input.value.trim();
   if(!t) return;
   addMsg(t,"user");
   input.value = "";
-  const i = findAnswer(t);
-  if(i>=0){ answer(i,true); }
-  else {
-    setTimeout(()=>{
+  input.disabled = true;
+
+  const typing = document.createElement("div");
+  typing.className = "msg bot typing";
+  typing.textContent = "Escribiendo";
+  body.appendChild(typing);
+  body.scrollTop = body.scrollHeight;
+
+  try{
+    const reply = await askN8n(t);
+    typing.remove();
+    if(reply){ addMsg(reply); }
+    else { throw new Error("Respuesta vacía"); }
+  }catch(err){
+    console.warn("n8n no respondió, uso respuestas locales:", err);
+    typing.remove();
+    const i = findAnswer(t);
+    if(i>=0){ answer(i,true); }
+    else {
       addMsg("No tengo esa respuesta, pero un asesor te puede ayudar. Deja tus datos y te escribimos.");
       showLeadForm();
-    },350);
+    }
+  }finally{
+    input.disabled = false;
+    input.focus();
   }
 });
 
