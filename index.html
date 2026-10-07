@@ -243,396 +243,80 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem
   </div>
 </footer>
 
-<!-- Chatbot -->
-<button class="chat-toggle" type="button" aria-controls="chat" aria-expanded="false" id="chatToggle">
-  <span class="bot-emoji" aria-hidden="true">🤖</span>
-  Asistente
-</button>
-
-<div class="chat" id="chat" role="dialog" aria-label="Asistente de Hardware Paruro">
-  <div class="chat-head">
-    <div class="who"><span class="avatar" aria-hidden="true">🤖</span><div><strong>Asistente Paruro</strong><span class="status" id="chatStatus">En línea (versión 7)</span></div></div>
-    <button class="chat-close" type="button" aria-label="Cerrar chat" id="chatClose">×</button>
-  </div>
-  <div class="chat-body" id="chatBody" aria-live="polite"></div>
-  <form class="chat-input" id="chatForm" autocomplete="off">
-    <input id="chatText" type="text" placeholder="Escribe tu pregunta…" aria-label="Escribe tu pregunta">
-    <button type="submit">Enviar</button>
-  </form>
-</div>
-
-<script>
-/* ===== Configuración: cambia aquí tus datos ===== */
-const CONFIG = {
-  whatsapp: "51998504090",                 // 51 = código de Perú
-  email: "juancarlosperezpayco@gmail.com",
-  empresa: "Hardware Paruro",
-  n8nWebhook: "https://juanqui.app.n8n.cloud/webhook/a9e3b5c4-7d8f-4e1a-9b32-ventas-electronica-v3/chat"
-};
-
-/* Sesión del chat para que n8n recuerde la conversación */
-function getSessionId(){
-  let id;
-  try{ id = localStorage.getItem("hp_chat_session"); }catch(e){}
-  if(!id){
-    id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
-         : "s-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-    try{ localStorage.setItem("hp_chat_session", id); }catch(e){}
-  }
-  return id;
+<!-- ===== Chatbot oficial de n8n ===== -->
+<style>/* Estilos del widget @n8n/chat 1.41.3 */
+/*! Package version @n8n/chat@1.41.3 */
+:root{--chat--color--primary:#e74266;--chat--color--primary-shade-50:#db4061;--chat--color--primary--shade-100:#cf3c5c;--chat--color--secondary:#20b69e;--chat--color-secondary-shade-50:#1ca08a;--chat--color-white:#fff;--chat--color-light:#f2f4f8;--chat--color-light-shade-50:#e6e9f1;--chat--color-light-shade-100:#c2c5cc;--chat--color-medium:#d2d4d9;--chat--color-dark:#101330;--chat--color-disabled:#d2d4d9;--chat--color-typing:#404040;--chat--spacing:1rem;--chat--border-radius:.25rem;--chat--transition-duration:.15s;--chat--font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;--chat--font-family--monospace:ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;--chat--window--width:400px;--chat--window--height:600px;--chat--window--bottom:var(--chat--spacing);--chat--window--right:var(--chat--spacing);--chat--window--z-index:9999;--chat--window--border:1px solid var(--chat--color-light-shade-50);--chat--window--border-radius:var(--chat--border-radius);--chat--window--margin-bottom:var(--chat--spacing);--chat--header-height:auto;--chat--header--padding:var(--chat--spacing);--chat--header--background:var(--chat--color-dark);--chat--header--color:var(--chat--color-light);--chat--header--border-top:none;--chat--header--border-bottom:none;--chat--header--border-left:none;--chat--header--border-right:none;--chat--heading--font-size:2em;--chat--subtitle--font-size:inherit;--chat--subtitle--line-height:1.8;--chat--message--font-size:1rem;--chat--message--padding:var(--chat--spacing);--chat--message--border-radius:var(--chat--border-radius);--chat--message-line-height:1.5;--chat--message--margin-bottom:calc(var(--chat--spacing) * 1);--chat--message--bot--background:var(--chat--color-white);--chat--message--bot--color:var(--chat--color-dark);--chat--message--bot--border:none;--chat--message--user--background:var(--chat--color--secondary);--chat--message--user--color:var(--chat--color-white);--chat--message--user--border:none;--chat--message--pre--background:#0000000d;--chat--messages-list--padding:var(--chat--spacing);--chat--toggle--size:64px;--chat--toggle--width:var(--chat--toggle--size);--chat--toggle--height:var(--chat--toggle--size);--chat--toggle--border-radius:50%;--chat--toggle--background:var(--chat--color--primary);--chat--toggle--hover--background:var(--chat--color--primary-shade-50);--chat--toggle--active--background:var(--chat--color--primary--shade-100);--chat--toggle--color:var(--chat--color-white);--chat--textarea--height:50px;--chat--textarea--max-height:30rem;--chat--input--width:100%;--chat--input--font-size:inherit;--chat--input--border:0;--chat--input--border-radius:0;--chat--input--padding:.8rem;--chat--input--background:var(--chat--color-white);--chat--input--text-color:initial;--chat--input--line-height:1.5;--chat--input--placeholder--font-size:var(--chat--input--font-size);--chat--input--border-active:0;--chat--input--left--panel--width:2rem;--chat--input--container--background:var(--chat--color-white);--chat--input--container--border:0;--chat--input--container--border-radius:0;--chat--input--container--padding:0;--chat--input--button--border-radius:16px;--chat--button--padding:calc(var(--chat--spacing) * 5 / 8) var(--chat--spacing);--chat--button--border-radius:var(--chat--border-radius);--chat--button--font-size:1rem;--chat--button--line-height:1;--chat--button--color--primary:var(--chat--color-light);--chat--button--background--primary:var(--chat--color--secondary);--chat--button--border--primary:none;--chat--button--color--primary--hover:var(--chat--color-light);--chat--button--background--primary--hover:var(--chat--color-secondary-shade-50);--chat--button--border--primary--hover:none;--chat--button--color--primary--disabled:var(--chat--color-light);--chat--button--background--primary--disabled:#81bbb1;--chat--button--border--primary--disabled:none;--chat--button--color--secondary:var(--chat--color-light);--chat--button--background--secondary:#949494;--chat--button--border--secondary:none;--chat--button--color--secondary--hover:var(--chat--color-light);--chat--button--background--secondary--hover:#828282;--chat--button--border--secondary--hover:none;--chat--button--color--secondary--disabled:var(--chat--color-light);--chat--button--background--secondary--disabled:#c7c7c7;--chat--button--border--secondary--disabled:none;--chat--close--button--color-hover:var(--chat--color--primary);--chat--message--actions--color:var(--chat--color--primary);--chat--message--actions--gap:var(--chat--spacing);--chat--input--send--button--background:var(--chat--color-white);--chat--input--send--button--color:var(--chat--color--secondary);--chat--input--send--button--background-hover:var(--chat--color--primary-shade-50);--chat--input--send--button--color-hover:var(--chat--color-secondary-shade-50);--chat--input--file--button--background:var(--chat--color-white);--chat--input--file--button--color:var(--chat--color--secondary);--chat--input--file--button--background-hover:var(--chat--input--file--button--background);--chat--input--file--button--color-hover:var(--chat--color-secondary-shade-50);--chat--files-spacing:.25rem;--chat--body--background:var(--chat--color-light);--chat--footer--padding:0;--chat--footer--background:var(--chat--color-light);--chat--footer--color:var(--chat--color-dark);--chat--footer--border-top:1px solid var(--chat--color-light-shade-100)}.n8n-chat{--spacing--5xs:calc(var(--chat--spacing) / 8);--spacing--4xs:calc(var(--chat--spacing) / 4);--spacing--2xs:calc(var(--chat--spacing) / 2);--font-family--monospace:var(--chat--font-family--monospace);--font-size--3xs:calc(var(--chat--message--font-size) * 5 / 8);--font-size--xs:calc(var(--chat--message--font-size) * 13 / 16);--font-size--sm:calc(var(--chat--message--font-size) * 7 / 8);--font-size--md:var(--chat--message--font-size);--font-size--lg:calc(var(--chat--message--font-size) * 9 / 8);--font-size--xl:calc(var(--chat--message--font-size) * 5 / 4);--font-weight--regular:400;--font-weight--medium:500;--font-weight--bold:600;--line-height--md:1.3;--line-height--lg:1.35;--line-height--xl:var(--chat--message-line-height);--radius--sm:calc(var(--chat--border-radius) / 2);--radius--lg:calc(var(--chat--border-radius) * 2);--radius--xl:calc(var(--chat--border-radius) * 3);--border-width:1px;--border-style:solid;--color--primary:var(--chat--color--primary);--color--background:var(--chat--color-light);--color--foreground:var(--chat--color-light-shade-50);--color--foreground--shade-1:var(--chat--color-light-shade-100);--color--foreground--tint-1:var(--chat--color-light);--color--neutral-200:var(--chat--color-light-shade-50);--color--neutral-300:var(--chat--color-light-shade-100);--color--text:currentColor;--color--text--shade-1:currentColor;--color--text--tint-1:currentColor}pre code.hljs{padding:1em;display:block;overflow-x:auto}code.hljs{padding:3px 5px}.hljs{color:#24292e;background:#fff}.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-variable.language_{color:#d73a49}.hljs-title,.hljs-title.class_,.hljs-title.class_.inherited__,.hljs-title.function_{color:#6f42c1}.hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,.hljs-number,.hljs-operator,.hljs-variable,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id{color:#005cc5}.hljs-regexp,.hljs-string,.hljs-meta .hljs-string{color:#032f62}.hljs-built_in,.hljs-symbol{color:#e36209}.hljs-comment,.hljs-code,.hljs-formula{color:#6a737d}.hljs-name,.hljs-quote,.hljs-selector-tag,.hljs-selector-pseudo{color:#22863a}.hljs-subst{color:#24292e}.hljs-section{color:#005cc5;font-weight:700}.hljs-bullet{color:#735c0f}.hljs-emphasis{color:#24292e;font-style:italic}.hljs-strong{color:#24292e;font-weight:700}.hljs-addition{color:#22863a;background-color:#f0fff4}.hljs-deletion{color:#b31d28;background-color:#ffeef0}[data-theme=dark] pre code.hljs{padding:1em;display:block;overflow-x:auto}[data-theme=dark] code.hljs{padding:3px 5px}[data-theme=dark] .hljs{color:#adbac7;background:#22272e}[data-theme=dark] .hljs-doctag,[data-theme=dark] .hljs-keyword,[data-theme=dark] .hljs-meta .hljs-keyword,[data-theme=dark] .hljs-template-tag,[data-theme=dark] .hljs-template-variable,[data-theme=dark] .hljs-type,[data-theme=dark] .hljs-variable.language_{color:#f47067}[data-theme=dark] .hljs-title,[data-theme=dark] .hljs-title.class_,[data-theme=dark] .hljs-title.class_.inherited__,[data-theme=dark] .hljs-title.function_{color:#dcbdfb}[data-theme=dark] .hljs-attr,[data-theme=dark] .hljs-attribute,[data-theme=dark] .hljs-literal,[data-theme=dark] .hljs-meta,[data-theme=dark] .hljs-number,[data-theme=dark] .hljs-operator,[data-theme=dark] .hljs-variable,[data-theme=dark] .hljs-selector-attr,[data-theme=dark] .hljs-selector-class,[data-theme=dark] .hljs-selector-id{color:#6cb6ff}[data-theme=dark] .hljs-regexp,[data-theme=dark] .hljs-string,[data-theme=dark] .hljs-meta .hljs-string{color:#96d0ff}[data-theme=dark] .hljs-built_in,[data-theme=dark] .hljs-symbol{color:#f69d50}[data-theme=dark] .hljs-comment,[data-theme=dark] .hljs-code,[data-theme=dark] .hljs-formula{color:#768390}[data-theme=dark] .hljs-name,[data-theme=dark] .hljs-quote,[data-theme=dark] .hljs-selector-tag,[data-theme=dark] .hljs-selector-pseudo{color:#8ddb8c}[data-theme=dark] .hljs-subst{color:#adbac7}[data-theme=dark] .hljs-section{color:#316dca;font-weight:700}[data-theme=dark] .hljs-bullet{color:#eac55f}[data-theme=dark] .hljs-emphasis{color:#adbac7;font-style:italic}[data-theme=dark] .hljs-strong{color:#adbac7;font-weight:700}[data-theme=dark] .hljs-addition{color:#b4f1b4;background-color:#1b4721}[data-theme=dark] .hljs-deletion{color:#ffd8d3;background-color:#78191b}@media (prefers-color-scheme:dark){body:not([data-theme]) pre code.hljs{padding:1em;display:block;overflow-x:auto}body:not([data-theme]) code.hljs{padding:3px 5px}body:not([data-theme]) .hljs{color:#adbac7;background:#22272e}body:not([data-theme]) .hljs-doctag,body:not([data-theme]) .hljs-keyword,body:not([data-theme]) .hljs-meta .hljs-keyword,body:not([data-theme]) .hljs-template-tag,body:not([data-theme]) .hljs-template-variable,body:not([data-theme]) .hljs-type,body:not([data-theme]) .hljs-variable.language_{color:#f47067}body:not([data-theme]) .hljs-title,body:not([data-theme]) .hljs-title.class_,body:not([data-theme]) .hljs-title.class_.inherited__,body:not([data-theme]) .hljs-title.function_{color:#dcbdfb}body:not([data-theme]) .hljs-attr,body:not([data-theme]) .hljs-attribute,body:not([data-theme]) .hljs-literal,body:not([data-theme]) .hljs-meta,body:not([data-theme]) .hljs-number,body:not([data-theme]) .hljs-operator,body:not([data-theme]) .hljs-variable,body:not([data-theme]) .hljs-selector-attr,body:not([data-theme]) .hljs-selector-class,body:not([data-theme]) .hljs-selector-id{color:#6cb6ff}body:not([data-theme]) .hljs-regexp,body:not([data-theme]) .hljs-string,body:not([data-theme]) .hljs-meta .hljs-string{color:#96d0ff}body:not([data-theme]) .hljs-built_in,body:not([data-theme]) .hljs-symbol{color:#f69d50}body:not([data-theme]) .hljs-comment,body:not([data-theme]) .hljs-code,body:not([data-theme]) .hljs-formula{color:#768390}body:not([data-theme]) .hljs-name,body:not([data-theme]) .hljs-quote,body:not([data-theme]) .hljs-selector-tag,body:not([data-theme]) .hljs-selector-pseudo{color:#8ddb8c}body:not([data-theme]) .hljs-subst{color:#adbac7}body:not([data-theme]) .hljs-section{color:#316dca;font-weight:700}body:not([data-theme]) .hljs-bullet{color:#eac55f}body:not([data-theme]) .hljs-emphasis{color:#adbac7;font-style:italic}body:not([data-theme]) .hljs-strong{color:#adbac7;font-weight:700}body:not([data-theme]) .hljs-addition{color:#b4f1b4;background-color:#1b4721}body:not([data-theme]) .hljs-deletion{color:#ffd8d3;background-color:#78191b}}.n8n-markdown{--markdown--spacing:var(--spacing--2xs);color:inherit;-webkit-text-size-adjust:100%;word-break:break-word;line-height:1.5em;display:block}.n8n-markdown *,.n8n-markdown :before,.n8n-markdown :after{box-sizing:border-box}.n8n-markdown p,.n8n-markdown li{font-size:inherit;line-height:inherit;margin:calc(var(--markdown--spacing) * 2) 0}.n8n-markdown p:first-child,.n8n-markdown li:first-child{margin-top:0}.n8n-markdown p:last-child,.n8n-markdown li:last-child{margin-bottom:0}.n8n-markdown li{margin:0}.n8n-markdown h1,.n8n-markdown h2,.n8n-markdown h3,.n8n-markdown h4,.n8n-markdown h5,.n8n-markdown h6{color:var(--color--text--shade-1);line-height:var(--line-height--md);font-weight:var(--font-weight--bold);scroll-margin-top:calc(var(--markdown--spacing) * 4);margin:0}.n8n-markdown h1{font-size:var(--font-size--xl);margin-top:calc(var(--markdown--spacing) * 3)}.n8n-markdown h2{font-size:var(--font-size--lg);margin-top:calc(var(--markdown--spacing) * 4)}.n8n-markdown h3{font-size:var(--font-size--md);margin-top:calc(var(--markdown--spacing) * 4)}.n8n-markdown h4{font-size:var(--font-size--sm);margin-top:calc(var(--markdown--spacing) * 4)}.n8n-markdown h5,.n8n-markdown h6{font-size:var(--font-size--sm);margin-top:calc(var(--markdown--spacing) * 3)}.n8n-markdown h2+h3{margin-top:calc(var(--markdown--spacing) * 3)}.n8n-markdown li>:is(h1,h2,h3,h4,h5,h6,p,strong):first-child{margin-top:0}.n8n-markdown strong,.n8n-markdown b{color:var(--color--text--shade-1);font-weight:var(--font-weight--bold)}.n8n-markdown a:not(:where(h1,h2,h3,h4,h5,h6) *){color:var(--color--text--shade-1);font-weight:var(--font-weight--medium);text-underline-offset:3px;text-decoration:underline;text-decoration-thickness:1px;transition:color .15s}.n8n-markdown a:not(:where(h1,h2,h3,h4,h5,h6) *):hover{color:var(--color--primary)}.n8n-markdown a:not(:where(h1,h2,h3,h4,h5,h6) *) code{font-weight:var(--font-weight--medium)}.n8n-markdown pre,.n8n-markdown code,.n8n-markdown kbd,.n8n-markdown samp{font-family:var(--font-family--monospace), "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-variant-ligatures:none}.n8n-markdown :not(pre)>code{font-weight:var(--font-weight--medium);font-size:var(--font-size--sm);padding:calc(var(--markdown--spacing) * .25) calc(var(--markdown--spacing) * .5);line-height:var(--line-height--lg);background-color:var(--chat--message--pre--background,var(--color--background));border-radius:var(--radius--sm)}.n8n-markdown :is(h1,h2,h3,h4,h5,h6) code{font-weight:var(--font-weight--bold)}.n8n-markdown pre{width:100%;font-family:var(--font-family--monospace);font-size:var(--font-size--sm);line-height:var(--line-height--xl);margin:var(--markdown--spacing) 0 calc(var(--markdown--spacing) * 2.5);white-space:pre-wrap;box-sizing:border-box;padding:calc(var(--markdown--spacing) * 2);background:var(--chat--message--pre--background,var(--color--background));border-radius:var(--radius--lg);tab-size:4;position:relative}.n8n-markdown pre code{font-family:var(--font-family--monospace)}.n8n-markdown pre code:before,.n8n-markdown pre code:after{content:none}.n8n-markdown pre code:last-of-type{padding-bottom:0}.n8n-markdown pre code *+*{margin-top:0}.n8n-markdown pre~pre{margin-bottom:calc(var(--markdown--spacing) * 2.5)}.n8n-markdown.n8n-markdown--single-pre pre{background:0 0;border-radius:0;margin:0}.n8n-markdown .n8n-markdown-code-block-actions{top:var(--markdown--spacing);right:var(--markdown--spacing);pointer-events:none;z-index:1;justify-content:flex-end;height:0;display:flex;position:sticky}.n8n-markdown .n8n-markdown-code-block-actions>*{pointer-events:auto}.n8n-markdown blockquote{border-left:calc(var(--markdown--spacing) * .5) solid var(--color--foreground--shade-1);padding-left:calc(var(--markdown--spacing) * 2);margin:calc(var(--markdown--spacing) * 2) 0;color:var(--color--text--tint-1);font-style:italic}.n8n-markdown blockquote p:first-of-type:before{content:open-quote}.n8n-markdown blockquote p:last-of-type:after{content:close-quote}.n8n-markdown hr{border:none;border-top:var(--border-width) var(--border-style) var(--color--foreground);margin:calc(var(--markdown--spacing) * 3) 0}.n8n-markdown hr+h2{margin-top:calc(var(--markdown--spacing) * 3)}.n8n-markdown ol{padding-left:calc(var(--markdown--spacing) * 4);margin:calc(var(--markdown--spacing) * 2) 0;list-style-type:decimal;list-style-position:outside}.n8n-markdown ol li+li{margin-top:calc(var(--markdown--spacing) * 1.5)}.n8n-markdown ol li::marker{font-family:var(--font-family--monospace);color:var(--color--text)}.n8n-markdown ul{padding-left:calc(var(--markdown--spacing) * 4);margin:calc(var(--markdown--spacing) * 2) 0;list-style-type:disc;list-style-position:outside}.n8n-markdown ul li+li{margin-top:var(--markdown--spacing)}.n8n-markdown ul li::marker{color:var(--color--foreground--shade-1)}.n8n-markdown ul[data-type=taskList]{padding-left:0;list-style:none}.n8n-markdown ul[data-type=taskList] li{align-items:flex-start;gap:var(--spacing--2xs);display:flex}.n8n-markdown ul[data-type=taskList] li>label{-webkit-user-select:none;user-select:none;flex:none}.n8n-markdown ul[data-type=taskList] li>div{flex:auto;min-width:0}.n8n-markdown ul ul,.n8n-markdown ol ol,.n8n-markdown ul ol,.n8n-markdown ol ul{margin-top:var(--markdown--spacing);padding-left:calc(var(--markdown--spacing) * 3);margin-bottom:0}.n8n-markdown .n8n-markdown-footnote-ref{font-size:var(--font-size--3xs);color:var(--color--text);background:var(--color--foreground--tint-1);border-radius:var(--radius--xl);padding:var(--spacing--4xs) var(--spacing--2xs);margin-inline:var(--spacing--5xs);vertical-align:middle;white-space:nowrap;line-height:1;font-weight:var(--font-weight--regular);display:inline-block}.n8n-markdown .n8n-markdown-table-container{width:100%;overflow-x:auto}.n8n-markdown table{table-layout:auto;width:100%;margin:calc(var(--markdown--spacing) * 2) 0;font-size:var(--font-size--sm);line-height:var(--line-height--lg)}.n8n-markdown thead{border-bottom-style:solid;border-bottom-width:1px;border-bottom-color:var(--color--neutral-300)}.n8n-markdown thead th{color:var(--color--text--shade-1);font-weight:var(--font-weight--bold);vertical-align:bottom;padding-inline:.6em;text-align:start;padding-bottom:.8em}.n8n-markdown thead th:first-child,.n8n-markdown tbody td:first-child,.n8n-markdown tfoot td:first-child{padding-inline-start:0}.n8n-markdown thead th:last-child,.n8n-markdown tbody td:last-child,.n8n-markdown tfoot td:last-child{padding-inline-end:0}.n8n-markdown tbody tr{border-bottom-style:solid;border-bottom-width:1px;border-bottom-color:var(--color--neutral-200)}.n8n-markdown tbody tr:last-child{border-bottom-width:0}.n8n-markdown tbody td,.n8n-markdown tfoot td{vertical-align:baseline;padding-top:.8em;padding-inline:.6em;padding-bottom:.8em}.n8n-markdown tfoot{border-top-style:solid;border-top-width:1px;border-top-color:var(--color--neutral-300)}.n8n-markdown td code{font-size:var(--font-size--xs)}.n8n-markdown th,.n8n-markdown td{text-align:start}.n8n-markdown figure{margin:calc(var(--markdown--spacing) * 2) 0}.n8n-markdown figcaption{margin-top:calc(var(--markdown--spacing) * 1.5);text-align:center;font-size:var(--font-size--sm);color:var(--color--text--tint-1);font-style:italic}.n8n-markdown img{max-width:100%;height:auto}.n8n-chat pre code.hljs{padding:1em;display:block;overflow-x:auto}.n8n-chat code.hljs{padding:3px 5px}.n8n-chat .hljs{color:#24292e;background:#fff}.n8n-chat .hljs-doctag,.n8n-chat .hljs-keyword,.n8n-chat .hljs-meta .hljs-keyword,.n8n-chat .hljs-template-tag,.n8n-chat .hljs-template-variable,.n8n-chat .hljs-type,.n8n-chat .hljs-variable.language_{color:#d73a49}.n8n-chat .hljs-title,.n8n-chat .hljs-title.class_,.n8n-chat .hljs-title.class_.inherited__,.n8n-chat .hljs-title.function_{color:#6f42c1}.n8n-chat .hljs-attr,.n8n-chat .hljs-attribute,.n8n-chat .hljs-literal,.n8n-chat .hljs-meta,.n8n-chat .hljs-number,.n8n-chat .hljs-operator,.n8n-chat .hljs-variable,.n8n-chat .hljs-selector-attr,.n8n-chat .hljs-selector-class,.n8n-chat .hljs-selector-id{color:#005cc5}.n8n-chat .hljs-regexp,.n8n-chat .hljs-string,.n8n-chat .hljs-meta .hljs-string{color:#032f62}.n8n-chat .hljs-built_in,.n8n-chat .hljs-symbol{color:#e36209}.n8n-chat .hljs-comment,.n8n-chat .hljs-code,.n8n-chat .hljs-formula{color:#6a737d}.n8n-chat .hljs-name,.n8n-chat .hljs-quote,.n8n-chat .hljs-selector-tag,.n8n-chat .hljs-selector-pseudo{color:#22863a}.n8n-chat .hljs-subst{color:#24292e}.n8n-chat .hljs-section{color:#005cc5;font-weight:700}.n8n-chat .hljs-bullet{color:#735c0f}.n8n-chat .hljs-emphasis{color:#24292e;font-style:italic}.n8n-chat .hljs-strong{color:#24292e;font-weight:700}.n8n-chat .hljs-addition{color:#22863a;background-color:#f0fff4}.n8n-chat .hljs-deletion{color:#b31d28;background-color:#ffeef0}.chat-button-wrapper-disabled{cursor:not-allowed}.chat-button{text-align:center;vertical-align:middle;-webkit-user-select:none;user-select:none;padding:var(--chat--button--padding);font-size:var(--chat--button--font-size);line-height:var(--chat--button--line-height);border-radius:var(--chat--button--border-radius);transition:color var(--chat--transition-duration) ease-in-out, background-color var(--chat--transition-duration) ease-in-out, border-color var(--chat--transition-duration) ease-in-out, box-shadow var(--chat--transition-duration) ease-in-out;cursor:pointer;text-decoration:none;display:inline-flex}.chat-button:focus{outline:0;box-shadow:0 0 0 .2rem #007bff40}.chat-button-primary{color:var(--chat--button--color--primary);background-color:var(--chat--button--background--primary);border:var(--chat--button--border--primary)}.chat-button-primary:hover{color:var(--chat--button--color--primary--hover);background-color:var(--chat--button--background--primary--hover);border:var(--chat--button--border--primary--hover)}.chat-button-primary-disabled{pointer-events:none;color:var(--chat--button--color--primary--disabled);background-color:var(--chat--button--background--primary--disabled);border:var(--chat--button--border--primary--disabled)}.chat-button-secondary{color:var(--chat--button--color--secondary);background-color:var(--chat--button--background--secondary);border:var(--chat--button--border--secondary)}.chat-button-secondary:hover{color:var(--chat--button--color--secondary--hover);background-color:var(--chat--button--background--secondary--hover);border:var(--chat--button--border--secondary--hover)}.chat-button-secondary-disabled{pointer-events:none;color:var(--chat--button--color--secondary--disabled);background-color:var(--chat--button--background--secondary--disabled);border:var(--chat--button--border--secondary--disabled)}.chat-message-markdown{box-sizing:border-box;font-size:inherit;display:block}.chat-message-markdown>:first-child{margin-top:0}.chat-message-markdown>:last-child{margin-bottom:0}.chat-message-markdown pre{font-family:inherit;font-size:inherit;white-space:pre-wrap;box-sizing:border-box;padding:var(--chat--spacing);background:var(--chat--message--pre--background);border-radius:var(--chat--border-radius);margin:0}._buttons_omuwb_1{gap:var(--chat--spacing);margin-top:var(--chat--spacing);display:flex}.chat-get-started{padding-top:var(--chat--spacing);padding-bottom:var(--chat--spacing);justify-content:center;align-items:center;height:100%;display:flex}.chat-powered-by{text-align:center}.chat-powered-by a{color:var(--chat--color--primary);text-decoration:none}.chat-get-started-footer{padding:var(--chat--spacing)}.chat-file[data-v-dc3234f3]{width:fit-content;max-width:15rem;color:var(--chat--color-dark);border:1px solid var(--chat--color-dark);background:#fff;border-radius:.25rem;flex-wrap:nowrap;align-items:center;gap:.25rem;padding:.5rem;font-size:.75rem;display:flex}.chat-file[data-v-dc3234f3]:has(.chat-file-preview){cursor:pointer}.chat-icon[data-v-dc3234f3]{flex-shrink:0}.chat-file-name-tooltip[data-v-dc3234f3]{overflow:hidden}.chat-file-name[data-v-dc3234f3]{text-overflow:ellipsis;white-space:nowrap;max-width:100%;margin:0;overflow:hidden}.chat-file-delete[data-v-dc3234f3],.chat-file-preview[data-v-dc3234f3]{cursor:pointer;background:0 0;border:none;flex-shrink:0;display:block}.chat-file-delete[data-v-dc3234f3]{position:relative}.chat-file-delete[data-v-dc3234f3]:hover{color:red}.chat-file-delete[data-v-dc3234f3]:before{content:"";position:absolute;inset:-10px}.chat-input[data-v-8cd4704b]{flex-direction:column;justify-content:center;align-items:center;width:100%;display:flex;position:relative}.chat-input[data-v-8cd4704b] *{box-sizing:border-box}.chat-inputs[data-v-8cd4704b]{width:var(--chat--input--width,100%);background:var(--chat--input--container--background,var(--color--background--light-2));border:var(--chat--input--container--border,1px solid var(--color--foreground--tint-1));border-radius:var(--chat--input--container--border-radius,24px);padding:var(--chat--input--container--padding,12px);justify-content:center;align-items:flex-end;display:flex}.chat-inputs textarea[data-v-8cd4704b]{font-family:inherit;font-size:var(--chat--input--font-size);border-radius:var(--chat--input--border-radius);width:100%;padding:var(--chat--input--padding);min-height:var(--chat--textarea--height);max-height:var(--chat--textarea--max-height);height:var(--chat--textarea--height);resize:none;background:var(--chat--input--background,white);color:var(--chat--input--text-color,initial);line-height:var(--chat--input--line-height,1.5);border:none;outline:none;overflow-y:auto}.chat-inputs textarea[data-v-8cd4704b]::placeholder{font-size:var(--chat--input--placeholder--font-size,var(--chat--input--font-size))}.chat-inputs-controls[data-v-8cd4704b]{display:flex}.chat-input-send-button[data-v-8cd4704b],.chat-input-file-button[data-v-8cd4704b]{height:var(--chat--textarea--height);width:var(--chat--textarea--height);background:var(--chat--input--send--button--background,transparent);cursor:pointer;color:var(--chat--input--send--button--color,var(--chat--color--secondary));border-radius:var(--chat--input--button--border-radius,16px);transition:all var(--chat--transition-duration,.15s) ease;border:none;justify-content:center;align-items:center;margin:8px;font-size:24px;display:inline-flex}.chat-input-send-button svg[data-v-8cd4704b],.chat-input-file-button svg[data-v-8cd4704b]{min-width:fit-content}.chat-input-send-button[disabled][data-v-8cd4704b],.chat-input-file-button[disabled][data-v-8cd4704b]{cursor:no-drop;color:var(--chat--color-disabled)}.chat-input-send-button[data-v-8cd4704b]:hover:not([disabled]),.chat-input-file-button[data-v-8cd4704b]:hover:not([disabled]){background:var(--chat--input--send--button--background-hover,#0000000d);color:var(--chat--input--send--button--color-hover,var(--chat--color--secondary))}.chat-input-file-button[data-v-8cd4704b]{background:var(--chat--input--file--button--background,transparent);color:var(--chat--input--file--button--color,var(--chat--color--secondary))}.chat-input-file-button[data-v-8cd4704b]:hover:not([disabled]){background:var(--chat--input--file--button--background-hover,#0000000d);color:var(--chat--input--file--button--color-hover,var(--chat--color--secondary))}.chat-files[data-v-8cd4704b]{width:100%;padding:var(--chat--files-spacing);flex-flow:wrap;gap:.5rem;display:flex;overflow:hidden auto}.chat-input-left-panel[data-v-8cd4704b]{width:var(--chat--input--left--panel--width);margin-left:.4rem}.chat-layout{width:100%;height:100%;font-family:var(--chat--font-family);flex-direction:column;display:flex;overflow-y:auto}.chat-layout .chat-header{height:var(--chat--header-height);padding:var(--chat--header--padding);background:var(--chat--header--background);color:var(--chat--header--color);border-top:var(--chat--header--border-top);border-bottom:var(--chat--header--border-bottom);border-left:var(--chat--header--border-left);border-right:var(--chat--header--border-right);flex-direction:column;justify-content:center;gap:1em;display:flex}.chat-layout .chat-header h1{font-size:var(--chat--heading--font-size);color:var(--chat--header--color)}.chat-layout .chat-header p{font-size:var(--chat--subtitle--font-size);line-height:var(--chat--subtitle--line-height)}.chat-layout .chat-body{background:var(--chat--body--background);flex-direction:column;flex:1;min-height:100px;display:flex;position:relative;overflow-y:auto}.chat-layout .chat-footer{border-top:var(--chat--footer--border-top,1px solid var(--chat--color-light-shade-100));background:var(--chat--footer--background);padding:var(--chat--footer--padding);color:var(--chat--footer--color)}.message-actions[data-v-41aa479b]{gap:var(--chat--message--actions--gap);margin:0 var(--chat--message--actions--gap);align-items:center;display:inline-flex}.icon[data-v-41aa479b]{color:var(--chat--message--actions--color);cursor:pointer}.icon[data-v-41aa479b]:hover{color:var(--chat--message--actions--hover)}.chat-message{max-width:fit-content;font-size:var(--chat--message--font-size);padding:var(--chat--message--padding);border-radius:var(--chat--message--border-radius);scroll-margin:3rem;display:block;position:relative;overflow:hidden}.chat-message .chat-message-actions{opacity:0;gap:1rem;display:flex;position:absolute;bottom:calc(100% - .5rem);left:0;transform:translateY(-.25rem)}.chat-message.chat-message-from-user .chat-message-actions{left:auto;right:0}.chat-message:hover .chat-message-actions{opacity:1}.chat-message p{line-height:var(--chat--message-line-height);word-wrap:break-word}.chat-message+.chat-message{margin-top:var(--chat--message--margin-bottom)}.chat-message.chat-message-from-user+.chat-message.chat-message-from-bot,.chat-message.chat-message-from-bot+.chat-message.chat-message-from-user{margin-top:var(--chat--spacing)}.chat-message.chat-message-from-bot:not(.chat-message-transparent){background-color:var(--chat--message--bot--background);border:var(--chat--message--bot--border)}.chat-message.chat-message-from-bot{color:var(--chat--message--bot--color);border-bottom-left-radius:0}.chat-message.chat-message-from-user:not(.chat-message-transparent){background-color:var(--chat--message--user--background);border:var(--chat--message--user--border)}.chat-message.chat-message-from-user{color:var(--chat--message--user--color);border-bottom-right-radius:0;margin-left:auto}.chat-message .chat-message-files{flex-wrap:wrap;gap:.25rem;padding-top:.5rem;display:flex}.chat-window-wrapper{bottom:var(--chat--window--bottom);right:var(--chat--window--right);z-index:var(--chat--window--z-index);max-width:calc(100% - var(--chat--window--right,var(--chat--spacing)) * 2);max-height:calc(100% - var(--chat--window--bottom,var(--chat--spacing)) * 2);flex-direction:column;display:flex;position:fixed}.chat-window-wrapper .chat-window{width:var(--chat--window--width);height:var(--chat--window--height);border:var(--chat--window--border,1px solid var(--chat--color-light-shade-100));border-radius:var(--chat--window--border-radius,var(--chat--border-radius));max-width:100%;max-height:100%;margin-bottom:var(--chat--window--margin-bottom,var(--chat--spacing));transform-origin:100% 100%;display:flex;overflow:hidden}.chat-window-wrapper .chat-window .chat-layout{flex:1;width:auto;height:auto}.chat-window-wrapper .chat-window-toggle{background:var(--chat--toggle--background);color:var(--chat--toggle--color);cursor:pointer;width:var(--chat--toggle--width);height:var(--chat--toggle--height);border-radius:var(--chat--toggle--border-radius,50%);transition:transform var(--chat--transition-duration) ease, background var(--chat--transition-duration) ease;flex:none;justify-content:center;align-items:center;margin-left:auto;display:inline-flex}.chat-window-wrapper .chat-window-toggle:hover,.chat-window-wrapper .chat-window-toggle:focus{background:var(--chat--toggle--hover--background);transform:scale(1.05)}.chat-window-wrapper .chat-window-toggle:active{background:var(--chat--toggle--active--background);transform:scale(.95)}.chat-window-transition-enter-active,.chat-window-transition-leave-active{transition:transform var(--chat--transition-duration) ease, opacity var(--chat--transition-duration) ease}.chat-window-transition-enter-from,.chat-window-transition-leave-to{opacity:0;transform:scale(0)}.chat-window-toggle-transition-enter-active,.chat-window-toggle-transition-leave-active{transition:opacity var(--chat--transition-duration) ease}.chat-window-toggle-transition-enter-from,.chat-window-toggle-transition-leave-to{opacity:0}.chat-message-typing{max-width:80px}.chat-message-typing.chat-message-typing-animation-scaling .chat-message-typing-circle{animation:.8s ease-in-out 3.6s infinite chat-message-typing-animation-scaling}.chat-message-typing.chat-message-typing-animation-bouncing .chat-message-typing-circle{animation:.8s ease-in-out 3.6s infinite chat-message-typing-animation-bouncing}.chat-message-typing .chat-message-typing-body{justify-content:center;align-items:center;display:flex}.chat-message-typing .chat-message-typing-circle{background-color:var(--chat--color-typing);border-radius:50%;width:10px;height:10px;margin:3px;display:block}.chat-message-typing .chat-message-typing-circle:first-child{animation-delay:0s}.chat-message-typing .chat-message-typing-circle:nth-child(2){animation-delay:.333s}.chat-message-typing .chat-message-typing-circle:nth-child(3){animation-delay:.666s}@keyframes chat-message-typing-animation-scaling{0%{transform:scale(1)}33%{transform:scale(1)}50%{transform:scale(1.4)}to{transform:scale(1)}}@keyframes chat-message-typing-animation-bouncing{0%{transform:translateY(0)}33%{transform:translateY(0)}50%{transform:translateY(-10px)}to{transform:translateY(0)}}.chat-messages-list{padding:var(--chat--messages-list--padding);margin-top:auto;display:block}.empty-container{justify-content:center;align-items:center;display:flex;container-type:size}.empty-container p{max-width:16em;margin:0}.empty{text-align:center;color:var(--color--text);justify-content:center;align-items:center;gap:var(--spacing--xs);padding-inline:var(--spacing--md);padding-bottom:var(--spacing--lg);flex-direction:column;display:flex;overflow:hidden}.emptyIcon{zoom:2.5;color:var(--color-button-secondary-border)}@container (height<150px){.empty{text-align:left;flex-direction:row}.emptyIcon{zoom:1.5}}.chat-heading{justify-content:space-between;align-items:center;display:flex}.chat-close-button{cursor:pointer;background:0 0;border:none;display:flex}.chat-close-button:hover{color:var(--chat--close--button--color-hover,var(--chat--color--primary))}
+/*$vite$:1*/
+</style>
+<style>
+:root{
+  --chat--color--primary:#d08a3c;
+  --chat--color--primary-shade-50:#bb7a32;
+  --chat--color--primary--shade-100:#a56b2b;
+  --chat--color--secondary:#123049;
+  --chat--color-secondary-shade-50:#0c2236;
+  --chat--color-dark:#14212e;
+  --chat--font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --chat--window--width:380px;
+  --chat--window--height:600px;
+  --chat--header--background:#123049;
+  --chat--header--color:#ffffff;
+  --chat--heading--font-size:1.4em;
+  --chat--message--bot--background:#ffffff;
+  --chat--message--bot--color:#14212e;
+  --chat--message--user--background:#123049;
+  --chat--message--user--color:#ffffff;
+  --chat--toggle--background:#d08a3c;
+  --chat--toggle--hover--background:#e09a4c;
+  --chat--toggle--active--background:#bb7a32;
+  --chat--toggle--size:68px;
 }
-const SESSION_ID = getSessionId();
+/* Emoji de chatbot en el botón flotante */
+.chat-window-toggle svg{display:none!important}
+.chat-window-toggle::before{content:"🤖";font-size:34px;line-height:1}
+.chat-window-wrapper .chat-window-toggle{box-shadow:0 8px 24px rgba(10,25,40,.35)}
+/* Emoji delante de cada respuesta del bot */
+.chat-message-from-bot .chat-message-markdown > :first-child::before{content:"🤖 "}
+.chat-heading h1{font-family:var(--display)}
+@media (max-width:480px){:root{--chat--window--width:calc(100vw - 24px);--chat--window--height:calc(100dvh - 120px)}}
+</style>
+<script type="module">
+import { createChat } from "https://cdn.jsdelivr.net/npm/@n8n/chat@1.41.3/dist/chat.bundle.es.js";
 
-/* Envía el mensaje al chatbot de n8n (nodo Chat Trigger) */
-async function askN8n(text){
-  const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 15000);
-  const res = await fetch(CONFIG.n8nWebhook, {
-    method: "POST",
-    signal: ctrl.signal,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "sendMessage", sessionId: SESSION_ID, chatInput: text })
-  });
-  clearTimeout(timer);
-  if(!res.ok) throw new Error("n8n respondió HTTP " + res.status + (res.status===404 ? " (¿workflow inactivo o URL incorrecta?)" : ""));
-  const raw = await res.text();
-  let data; try{ data = JSON.parse(raw); }catch(e){ return raw.trim(); }
-  if(Array.isArray(data)) data = data[0] || {};
-  return (data.output || data.text || data.response || data.message || "").toString().trim();
-}
-
-/* ===== Las 10 preguntas básicas ===== */
-const FAQ = [
-  { q:"¿Cuál es el horario de atención?", k:["horario","hora","abren","abierto","cierran","atienden","atencion","domingo","sabado","feriado"],
-    a:"Atendemos de lunes a sábado de 9:00 a. m. a 7:00 p. m. y los domingos de 10:00 a. m. a 2:00 p. m." },
-  { q:"¿Dónde están ubicados?", k:["ubicacion","ubicados","ubican","direccion","donde","tienda","local","llegar","paruro","mapa"],
-    a:"Estamos en Jr. Paruro, Cercado de Lima, la zona de tiendas de cómputo más conocida de la ciudad." },
-  { q:"¿Qué productos venden?", k:["producto","productos","venden","catalogo","marcas","componente","componentes","que tienen","que venden"],
-    a:"En cómputo: procesadores, tarjetas de video, placas madre, memorias RAM, SSD y discos duros, fuentes, cases, monitores, periféricos y laptops. En electrónica: resistencias, condensadores, semiconductores, circuitos integrados, Arduino, sensores, módulos y herramientas. Trabajamos con AMD, Intel, NVIDIA, ASUS, MSI, Gigabyte, Kingston, Corsair, entre otras." },
-  { q:"¿Qué métodos de pago aceptan?", k:["pago","pagar","yape","plin","visa","mastercard","transferencia","efectivo","cuotas","deposito"],
-    a:"Aceptamos efectivo, Yape, Plin, transferencia bancaria y tarjetas de crédito o débito." },
-  { q:"¿Hacen envíos a provincias?", k:["envio","envios","delivery","provincia","despacho","agencia","shalom","olva"],
-    a:"Sí. Hacemos delivery en Lima Metropolitana y envíos a todo el Perú por agencia. El costo depende del destino y del tamaño del pedido." },
-  { q:"¿Los productos tienen garantía?", k:["garantia","falla","defecto","devolucion","cambio"],
-    a:"Sí, todos nuestros productos son nuevos y tienen garantía. El plazo depende de la marca y del producto; te lo indicamos al momento de la compra." },
-  { q:"¿Arman computadoras?", k:["armar","armado","arman","ensamblar","pc gamer","computadora","configuracion"],
-    a:"Sí. Cuéntanos tu presupuesto y para qué usarás la PC (oficina, estudios, gaming, diseño). Te recomendamos las piezas, la armamos, instalamos el sistema y la probamos antes de entregarla." },
-  { q:"¿Hacen servicio técnico?", k:["tecnico","reparacion","reparar","mantenimiento","limpieza","formateo","formatear"],
-    a:"Sí: diagnóstico, mantenimiento y limpieza, cambio de pasta térmica, instalación de sistema operativo y mejoras de RAM o SSD." },
-  { q:"¿Emiten boleta o factura?", k:["boleta","factura","ruc","comprobante","empresa"],
-    a:"Sí, emitimos boleta o factura electrónica. Para factura solo necesitamos tu RUC y razón social." },
-  { q:"¿Cómo pido una cotización?", k:["cotizacion","cotizar","precio","precios","costo","cuanto","presupuesto","stock"],
-    a:"Puedes dejar tus datos aquí mismo y lo que necesitas. Tu consulta nos llegará por WhatsApp o correo y te responderemos con precios y stock actualizados." }
-];
-
-/* ===== Lógica del chat ===== */
-const chat = document.getElementById("chat");
-const body = document.getElementById("chatBody");
-const toggle = document.getElementById("chatToggle");
-const form = document.getElementById("chatForm");
-const input = document.getElementById("chatText");
-let started = false;
-
-const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-
-function addMsg(text, who="bot"){
-  const d = document.createElement("div");
-  d.className = "msg " + who;
-  d.textContent = (who==="bot" ? "🤖 " : "") + text;
-  body.appendChild(d);
-  body.scrollTop = body.scrollHeight;
-}
-
-function showQuick(){ /* preguntas básicas eliminadas: el chat es conversacional con n8n */ }
-
-/* ===== Catálogo: respuestas sobre los componentes que vendemos ===== */
-const PRODUCTS = [
-  { name:"Procesadores", k:["procesador","procesadores","cpu","ryzen","intel","core i3","core i5","core i7","core i9","i3","i5","i7","i9","amd","ultra 5","ultra 7"],
-    a:"Tenemos procesadores AMD Ryzen e Intel Core:\n• Oficina y estudios: Ryzen 5 5600G / 8600G o Intel Core i3-12100 / i5-12400.\n• Gaming: Ryzen 5 7600, Ryzen 7 7800X3D, Intel Core i5-14400F / i5-14600K.\n• Edición y diseño: Ryzen 9 7900X / 9900X, Intel Core i7-14700K / Core Ultra 7.\nTe ayudamos a elegir la placa madre compatible." },
-  { name:"Tarjetas de video", k:["tarjeta de video","tarjetas de video","tarjeta grafica","grafica","graficas","gpu","rtx","gtx","geforce","radeon","rx","nvidia","3060","4060","4070","5060","5070","7600","7800"],
-    a:"Tarjetas de video NVIDIA GeForce y AMD Radeon (ASUS, MSI, Gigabyte, Zotac, Sapphire):\n• Entrada (1080p): RTX 3050 / RTX 4060 / RX 7600.\n• Gama media (1440p): RTX 4060 Ti / RTX 5060 Ti / RX 7700 XT.\n• Alta gama: RTX 4070 Super / RTX 5070 / RX 7800 XT y superiores.\nDinos qué juegos o programas usas y te recomendamos la ideal." },
-  { name:"Placas madre", k:["placa madre","placas madre","placa","motherboard","mainboard","board","chipset","am4","am5","b450","b550","b650","x670","h610","b760","z790","lga1700"],
-    a:"Placas madre ASUS, MSI, Gigabyte y ASRock:\n• AMD AM4 (B450, B550) y AM5 (B650, X670, B850).\n• Intel LGA1700 (H610, B760, Z790) y LGA1851.\nFormatos ATX, Micro-ATX y Mini-ITX. Verificamos la compatibilidad con tu procesador y memoria." },
-  { name:"Memorias RAM", k:["ram","memoria","memorias","ddr4","ddr5","sodimm","8gb","16gb","32gb","64gb"],
-    a:"Memorias RAM Kingston Fury, Corsair, TeamGroup y ADATA:\n• DDR4 y DDR5 para PC, en kits de 8, 16, 32 y 64 GB.\n• SODIMM DDR4/DDR5 para laptop.\nRecomendamos 16 GB para uso general y 32 GB para gaming o edición." },
-  { name:"Almacenamiento", k:["ssd","nvme","m.2","m2","disco","discos","disco duro","hdd","almacenamiento","sata","1tb","2tb","500gb","512gb"],
-    a:"Almacenamiento Kingston, Western Digital, Samsung, Crucial y Seagate:\n• SSD NVMe M.2 (Gen3 y Gen4) de 500 GB, 1 TB y 2 TB.\n• SSD SATA de 2,5\" para PC y laptop.\n• Discos duros de 1 a 4 TB para respaldo.\nUn SSD hace que tu equipo encienda y abra programas mucho más rápido." },
-  { name:"Laptops", k:["laptop","laptops","notebook","portatil","macbook","lenovo","hp","asus","acer","dell","msi"],
-    a:"Laptops Lenovo, HP, ASUS, Acer y MSI:\n• Estudio y oficina: Core i5 / Ryzen 5, 16 GB RAM, SSD 512 GB.\n• Gamer: RTX 4050 / 4060 con pantalla de 144 Hz.\n• Diseño: pantallas de buen color y 32 GB de RAM.\nCuéntanos tu presupuesto y uso y te enviamos opciones." },
-  { name:"Monitores", k:["monitor","monitores","pantalla","144hz","165hz","240hz","4k","2k","ips","curvo"],
-    a:"Monitores LG, Samsung, ASUS, AOC y Teros:\n• Oficina: 22\" a 27\" Full HD IPS.\n• Gaming: 144 Hz, 165 Hz y 240 Hz en Full HD y 2K.\n• Diseño: 2K y 4K con buena precisión de color." },
-  { name:"Fuentes y cases", k:["fuente","fuentes","psu","fuente de poder","watts","80 plus","case","cases","gabinete","chasis","cooler","refrigeracion","ventilador","liquida"],
-    a:"Fuentes certificadas 80 Plus (Corsair, EVGA, MSI, Cooler Master, Thermaltake) de 550 W a 1000 W, cases ATX y Micro-ATX, coolers por aire y refrigeración líquida. Te calculamos la potencia que necesita tu PC." },
-  { name:"Periféricos", k:["periferico","perifericos","teclado","teclados","mouse","audifonos","headset","auricular","parlante","webcam","microfono","mousepad","impresora","router","wifi"],
-    a:"Periféricos Logitech, Redragon, HyperX, Razer y Teros: teclados mecánicos y de oficina, mouse, audífonos, webcams, micrófonos, parlantes y adaptadores WiFi." },
-
-  /* ---- Electrónica ---- */
-  { name:"Resistencias", k:["resistencia","resistencias","resistor","resistores","ohm","ohmios","ohmio","potenciometro","potenciometros","trimmer","preset"],
-    a:"Sí, vendemos resistencias:\n• Carbón y película metálica de 1/4 W, 1/2 W, 1 W, 2 W y 5 W.\n• Valores de 1 Ω a 10 MΩ (serie E12 y E24), por unidad o en bolsas de 100.\n• Kits surtidos, potenciómetros y trimmers." },
-  { name:"Condensadores", k:["condensador","condensadores","capacitor","capacitores","electrolitico","ceramico","poliester","tantalio","microfaradio","faradio"],
-    a:"Sí, vendemos condensadores electrolíticos, cerámicos, de poliéster y de tantalio, desde picofaradios hasta miles de microfaradios, en voltajes de 16 V a 450 V. También kits surtidos." },
-  { name:"Semiconductores", k:["diodo","diodos","led","leds","transistor","transistores","mosfet","tiristor","triac","scr","zener","puente rectificador","regulador","7805","lm317","1n4007","2n2222","bc547","tip31","irf"],
-    a:"Sí, tenemos semiconductores: diodos (1N4007, Zener, Schottky), puentes rectificadores, LEDs de 3 y 5 mm, transistores (2N2222, BC547, TIP31, TIP41), MOSFET (IRF), triacs, SCR y reguladores (7805, LM317)." },
-  { name:"Circuitos integrados", k:["integrado","integrados","circuito integrado","chip","555","lm358","lm741","74hc","cd4017","l298","optoacoplador","pc817","microcontrolador","pic","atmega"],
-    a:"Sí, tenemos circuitos integrados: temporizadores 555, amplificadores operacionales (LM358, LM741), lógica 74HC y CD4000, drivers (L298N), optoacopladores (PC817) y microcontroladores PIC y ATmega, con sus zócalos." },
-  { name:"Arduino y módulos", k:["arduino","esp32","esp8266","nodemcu","raspberry","sensor","sensores","modulo","modulos","relay","rele","servo","motor","pantalla lcd","oled","ultrasonico","hc-sr04","dht11","bluetooth","hc-05","robotica"],
-    a:"Sí, vendemos Arduino (Uno, Nano, Mega), ESP32, ESP8266 y Raspberry Pi, además de sensores (ultrasonido, temperatura, humedad, movimiento), relés, servomotores, motores, pantallas LCD y OLED, y módulos Bluetooth y WiFi. Ideal para proyectos y robótica." },
-  { name:"Herramientas y accesorios", k:["cautin","soldador","estano","pasta de soldar","multimetro","tester","protoboard","jumper","jumpers","cable","cables","borneras","bornera","conector","conectores","placa perforada","baquelita","termocontraible","pinza","alicate","bateria","baterias","porta pilas","fuente de laboratorio"],
-    a:"Sí, tenemos herramientas y accesorios: cautines y estaciones de soldar, estaño y pasta, multímetros, protoboards, cables jumper, conectores y borneras, placas perforadas y baquelitas, termocontraíble, pinzas, baterías y porta pilas." }
-];
-
-/* Detecta valores como "100k", "4.7kΩ", "10 uf", "220 ohm" */
-function detectValue(text){
-  const t = norm(text).replace(",",".");
-  const r = t.match(/(\d+(?:\.\d+)?)\s*(k|m)\s*(ohm|ohmios|ohms|Ω)?(?![a-z])/i) || t.match(/(\d+(?:\.\d+)?)\s*(ohm|ohmios|ohms|Ω)/i);
-  const c = t.match(/(\d+(?:\.\d+)?)\s*(uf|µf|mf|nf|pf|microfaradios?)/i);
-  if(c) return { type:"cap", label: c[1] + " " + c[2].replace(/microfaradios?/i,"µF").replace(/^uf$/i,"µF").replace(/^nf$/i,"nF").replace(/^pf$/i,"pF").replace(/^mf$/i,"µF") };
-  if(r){
-    const unit = /^(k)$/i.test(r[2]) ? " kΩ" : /^(m)$/i.test(r[2]) ? " MΩ" : " Ω";
-    return { type:"res", label: r[1] + unit };
-  }
-  return null;
-}
-
-const PRODUCT_INTRO = "Estos son los componentes que vendemos. Elige uno para ver detalles:";
-
-/* Coincidencia de palabras: las cortas (ram, rx, i5, hp) deben ser palabra completa */
-function cleanText(t){ return " " + norm(t).replace(/[¿?¡!,;:()"]/g," ").replace(/\s+/g," ").trim() + " "; }
-function hasKw(txt, k){
-  const kk = norm(k);
-  return kk.length <= 4 ? txt.includes(" " + kk + " ") : txt.includes(kk);
-}
-function findProducts(text){
-  const t = cleanText(text);
-  const v = detectValue(text);
-  if(v && v.type==="res" && !/\b(gb|tb|hz|w|watts|mb)\b/.test(norm(text))) {
-    const extra = PRODUCTS.findIndex(p=>p.name==="Resistencias");
-    if(!PRODUCTS[extra].k.some(k=>hasKw(t,k)) && /\d\s*k\b|ohm|Ω/i.test(norm(text))) return [extra];
-  }
-  if(v && v.type==="cap"){
-    const extra = PRODUCTS.findIndex(p=>p.name==="Condensadores");
-    if(!PRODUCTS[extra].k.some(k=>hasKw(t,k))) return [extra];
-  }
-  return PRODUCTS.map((p,i)=>({i, s:p.k.filter(k=>hasKw(t,k)).length})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).map(x=>x.i);
-}
-
-function showProductMenu(){
-  addMsg(PRODUCT_INTRO);
-  const wrap = document.createElement("div");
-  wrap.className = "quick";
-  PRODUCTS.forEach((p,i)=>{
-    const b = document.createElement("button");
-    b.type="button"; b.textContent = p.name;
-    b.onclick = ()=>{ addMsg(p.name,"user"); productAnswer([i]); };
-    wrap.appendChild(b);
-  });
-  body.appendChild(wrap);
-  body.scrollTop = body.scrollHeight;
-}
-
-let lastText = "";
-function productAnswer(list, asksPrice=false){
-  setTimeout(()=>{
-    const v = detectValue(lastText);
-    const first = PRODUCTS[list[0]] ? PRODUCTS[list[0]].name : "";
-    if(v && v.type==="res" && first==="Resistencias") addMsg("Sí, tenemos resistencias de " + v.label + " en 1/4 W, 1/2 W y otras potencias.");
-    if(v && v.type==="cap" && first==="Condensadores") addMsg("Sí, tenemos condensadores de " + v.label + " en varios voltajes.");
-    list.slice(0,3).forEach(i=>addMsg(PRODUCTS[i].a));
-    addMsg(asksPrice
-      ? "Los precios cambian según stock y tipo de cambio. Déjame tus datos y te enviamos el precio actualizado por WhatsApp:"
-      : "Si quieres precio y stock actualizado, escribe «dejar mis datos» o pregúntame por otro componente.");
-    if(asksPrice) showLeadForm();
-    body.scrollTop = body.scrollHeight;
-  },350);
-}
-
-function answer(i, fromText=false){
-  if(!fromText) addMsg(FAQ[i].q,"user");
-  
-  setTimeout(()=>{
-    addMsg(FAQ[i].a);
-    if(i===9){ showLeadForm(); }
-    else { addMsg("¿Te ayudo con algo más?"); }
-  },350);
-}
-
-const SMALLTALK = [
-  { k:["hola","buenas","buenos dias","buen dia","buenas tardes","buenas noches","hey","saludos","que tal","alo"],
-    a:"¡Hola! Bienvenido a Hardware Paruro. ¿En qué te puedo ayudar? Escríbeme lo que buscas: componentes de cómputo, electrónica, precios, horarios o envíos.", menu:false },
-  { k:["gracias","muchas gracias","genial","perfecto","excelente","ok","listo","chevere"],
-    a:"¡Con gusto! Si necesitas algo más, aquí estoy.", menu:false },
-  { k:["chau","adios","hasta luego","nos vemos","bye"],
-    a:"¡Gracias por escribirnos! Te esperamos en Hardware Paruro.", menu:false },
-  { k:["dejar mis datos","mis datos","datos","asesor","humano","persona","vendedor","llamar","whatsapp","contacto","telefono","numero","correo"],
-    a:"Un asesor te atenderá por WhatsApp al 998 504 090 o por correo a juancarlosperezpayco@gmail.com. También puedes dejar tus datos aquí y te escribimos.", lead:true }
-];
-
-const ASK_WORDS = ["tienen","tienes","venden","vendes","hay","busco","necesito","quiero","consiguen","manejan","stock"];
-const PRICE_WORDS = ["precio","precios","cuanto","cuesta","cuestan","costo","vale","valen","cotizacion","cotizar"];
-
-function localReply(text){
-  lastText = text;
-  const t = cleanText(text);
-  const faq = findAnswer(text);
-  // 1) Temas de servicio (horario, pago, envío, garantía, etc.) tienen prioridad
-  if(faq>=0 && faq!==2 && faq!==9 && faq!==6){ answer(faq,true); return; }
-  // 2) Preguntas sobre componentes
-  const prods = findProducts(text);
-  if(prods.length){
-    const asksPrice = PRICE_WORDS.some(w=>hasKw(t,w));
-    productAnswer(prods, asksPrice);
-    return;
-  }
-  // 3) Armado, catálogo general o cotización
-  if(faq>=0){ answer(faq,true); return; }
-  // 4) Saludos y frases comunes
-  for(const st of SMALLTALK){
-    if(st.k.some(k=>hasKw(t,k))){
-      setTimeout(()=>{
-        addMsg(st.a);
-        if(st.menu) showQuick();
-        if(st.lead) showLeadForm();
-      },350);
-      return;
+createChat({
+  webhookUrl: "https://juanqui.app.n8n.cloud/webhook/a9e3b5c4-7d8f-4e1a-9b32-ventas-electronica-v3/chat",
+  mode: "window",
+  showWelcomeScreen: false,      // sin pantalla ni preguntas iniciales
+  loadPreviousSession: false,
+  chatInputKey: "chatInput",
+  chatSessionKey: "sessionId",
+  defaultLanguage: "en",
+  initialMessages: [
+    "¡Hola! Soy el asistente virtual de Hardware Paruro.",
+    "¿En qué te puedo ayudar hoy?"
+  ],
+  i18n: {
+    en: {
+      title: "🤖 Asistente Paruro",
+      subtitle: "Cómputo y electrónica en Jr. Paruro",
+      footer: "",
+      getStarted: "Nueva conversación",
+      inputPlaceholder: "Escribe tu pregunta…",
+      closeButtonTooltip: "Cerrar"
     }
-  }
-  // 5) Pregunta por un producto que no está en la lista
-  if(ASK_WORDS.some(w=>hasKw(t,w))){
-    setTimeout(()=>{
-      addMsg("Es posible que lo tengamos: en Paruro conseguimos casi todo en componentes de cómputo y electrónica. Déjame tus datos y te confirmamos stock y precio por WhatsApp.");
-      showLeadForm();
-    },350);
-    return;
-  }
-  // 6) No entendió: ofrece opciones
-  setTimeout(()=>{
-    addMsg("No estoy seguro de haber entendido. Pregúntame por un componente (por ejemplo: «¿tienen RTX 4060?» o «resistencias de 100k») o escribe «dejar mis datos» para que un asesor te contacte.");
-  },350);
-}
-
-/* ¿Lo puede responder el asistente local? */
-function knowsLocally(text){
-  const t = cleanText(text);
-  return detectValue(text)!==null && findProducts(text).length>0 || findAnswer(text)>=0 || findProducts(text).length>0 || SMALLTALK.some(st=>st.k.some(k=>hasKw(t,k)));
-}
-
-function findAnswer(text){
-  const t = cleanText(text);
-  let best=-1, score=0;
-  FAQ.forEach((f,i)=>{
-    const s = f.k.filter(k=>hasKw(t,k)).length;
-    if(s>score){score=s;best=i;}
-  });
-  return best;
-}
-
-function showLeadForm(){
-  setTimeout(()=>{
-    addMsg("Déjame tus datos y lo que necesitas. Al enviar, se abrirá WhatsApp o tu correo con el mensaje listo.");
-    const f = document.createElement("div");
-    f.className = "lead-form";
-    f.innerHTML = `
-      <div><label for="lName">Nombre</label><input id="lName" type="text" autocomplete="name"></div>
-      <div><label for="lPhone">Celular</label><input id="lPhone" type="tel" inputmode="tel" autocomplete="tel"></div>
-      <div><label for="lMail">Correo (opcional)</label><input id="lMail" type="email" autocomplete="email"></div>
-      <div><label for="lMsg">¿Qué necesitas?</label><textarea id="lMsg" placeholder="Ej.: PC para diseño con presupuesto de S/ 3500"></textarea></div>
-      <p class="err" id="lErr"></p>
-      <div class="row">
-        <button type="button" class="btn btn-wa" id="sendWa">Enviar por WhatsApp</button>
-        <button type="button" class="btn btn-mail" id="sendMail">Enviar por correo</button>
-      </div>`;
-    body.appendChild(f);
-    body.scrollTop = body.scrollHeight;
-    f.querySelector("#sendWa").onclick = ()=>sendLead("wa", f);
-    f.querySelector("#sendMail").onclick = ()=>sendLead("mail", f);
-  },300);
-}
-
-function buildLead(f){
-  const name = f.querySelector("#lName").value.trim();
-  const phone = f.querySelector("#lPhone").value.trim();
-  const mail = f.querySelector("#lMail").value.trim();
-  const need = f.querySelector("#lMsg").value.trim();
-  const err = f.querySelector("#lErr");
-  if(!name || !phone || !need){ err.textContent = "Completa nombre, celular y lo que necesitas."; return null; }
-  err.textContent = "";
-  const history = [...body.querySelectorAll(".msg.user")].map(m=>"- "+m.textContent).join("\n");
-  const text =
-`Nueva consulta desde la web de ${CONFIG.empresa}
-Nombre: ${name}
-Celular: ${phone}
-Correo: ${mail || "No indicado"}
-Necesita: ${need}
-
-Preguntas hechas en el chat:
-${history || "- Ninguna"}`;
-  return { text, name };
-}
-
-function sendLead(channel, f){
-  const lead = buildLead(f);
-  if(!lead) return;
-  let url;
-  if(channel==="wa"){
-    url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(lead.text)}`;
-    window.open(url,"_blank","noopener");
-  } else {
-    url = `mailto:${CONFIG.email}?subject=${encodeURIComponent("Consulta web - "+lead.name)}&body=${encodeURIComponent(lead.text)}`;
-    window.location.href = url;
-  }
-  addMsg(channel==="wa"
-    ? "Listo. Se abrió WhatsApp con tu mensaje: solo presiona enviar."
-    : "Listo. Se abrió tu correo con el mensaje: solo presiona enviar.");
-}
-
-function openChat(){
-  chat.classList.add("open");
-  toggle.setAttribute("aria-expanded","true");
-  if(!started){
-    started = true;
-    addMsg("¡Hola! Soy el asistente virtual de Hardware Paruro. ¿En qué te puedo ayudar hoy?");
-  }
-  setTimeout(()=>input.focus(),50);
-}
-function closeChat(){ chat.classList.remove("open"); toggle.setAttribute("aria-expanded","false"); toggle.focus(); }
-
-toggle.onclick = ()=> chat.classList.contains("open") ? closeChat() : openChat();
-document.getElementById("chatClose").onclick = closeChat;
-document.querySelectorAll("[data-open-chat]").forEach(b=>b.onclick=openChat);
-document.addEventListener("keydown",e=>{ if(e.key==="Escape" && chat.classList.contains("open")) closeChat(); });
-
-form.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const t = input.value.trim();
-  if(!t) return;
-  addMsg(t,"user");
-  input.value = "";
-
-  // Cada mensaje se envía a tu agente de n8n
-  input.disabled = true;
-
-  const typing = document.createElement("div");
-  typing.className = "msg bot typing";
-  typing.textContent = "🤖 Escribiendo";
-  body.appendChild(typing);
-  body.scrollTop = body.scrollHeight;
-
-  try{
-    const reply = await askN8n(t);
-    typing.remove();
-    if(reply){ addMsg(reply); }
-    else { throw new Error("Respuesta vacía"); }
-  }catch(err){
-    console.warn("n8n no respondió, uso el asistente local:", err.message || err);
-    typing.remove();
-    localReply(t);
-  }finally{
-    input.disabled = false;
-    input.focus();
   }
 });
 
-document.getElementById("year").textContent = new Date().getFullYear();
+/* Los botones "Hacer una consulta" y "Abrir el chat" abren el chatbot de n8n */
+document.querySelectorAll("[data-open-chat]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const t = document.querySelector(".chat-window-toggle");
+    const open = document.querySelector(".chat-window");
+    if(t && !(open && open.offsetParent)) t.click();
+  });
+});
 </script>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
